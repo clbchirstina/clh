@@ -76,7 +76,7 @@ th, td {
 
 <h3>➕ 友達追加 / 編集</h3>
 <input id="clubId" placeholder="Clubhouse ID">
-<input id="name" placeholder="名前">
+<input id="friendName" placeholder="名前">
 <textarea id="intro" placeholder="紹介"></textarea>
 <input type="file" id="iconInput" accept="image/*">
 <button onclick="saveFriend()">保存</button>
@@ -103,21 +103,21 @@ th, td {
 </div>
 
 <script>
-const PASS_KEY="club_pass", DATA_KEY="club_friends";
-let friends = JSON.parse(localStorage.getItem(DATA_KEY))||[];
-let editIndex=null, currentIcon=null;
+const PASS_KEY="clubpass", DATA_KEY="club_friends";
+let friends = JSON.parse(localStorage.getItem(DATA_KEY)) || [];
+let editIndex = null, currentIcon = null;
 
 function login(){
-  const p=passwordInput.value;
+  const p = document.getElementById("passwordInput").value;
   if(!localStorage.getItem(PASS_KEY)) localStorage.setItem(PASS_KEY,p);
-  if(p===localStorage.getItem(PASS_KEY)){
-    loginBox.style.display="none";
-    main.style.display="block";
+  if(p === localStorage.getItem(PASS_KEY)){
+    document.getElementById("loginBox").style.display="none";
+    document.getElementById("main").style.display="block";
     render();
   } else alert("パスワードが違います");
 }
 
-iconInput.onchange = ()=>{
+document.getElementById("iconInput").onchange = ()=>{
   const file = iconInput.files[0];
   if(!file) return;
   const reader = new FileReader();
@@ -130,19 +130,14 @@ function saveFriend(){
   const nameVal = document.getElementById("friendName").value.trim();
   const introVal = document.getElementById("intro").value.trim();
 
-  if (!id || !nameVal) {
+  if(!id || !nameVal){
     alert("IDと名前は必須です");
     return;
   }
 
-  const data = {
-    id: id,
-    name: nameVal,
-    intro: introVal,
-    icon: currentIcon
-  };
+  const data = { id, name: nameVal, intro: introVal, icon: currentIcon };
 
-  if (editIndex !== null) {
+  if(editIndex !== null){
     friends[editIndex] = { ...friends[editIndex], ...data };
     editIndex = null;
   } else {
@@ -151,41 +146,44 @@ function saveFriend(){
 
   localStorage.setItem(DATA_KEY, JSON.stringify(friends));
 
-  document.getElementById("clubId").value = "";
-  document.getElementById("friendName").value = "";
-  document.getElementById("intro").value = "";
-  document.getElementById("iconInput").value = "";
-  currentIcon = null;
+  document.getElementById("clubId").value="";
+  document.getElementById("friendName").value="";
+  document.getElementById("intro").value="";
+  document.getElementById("iconInput").value="";
+  currentIcon=null;
 
   render();
 }
 
 function render(){
-  const q=search.value.toLowerCase();
+  const q = document.getElementById("search").value.toLowerCase();
+  const list = document.getElementById("list");
   list.innerHTML="";
-  friends.filter(f=>f.id.toLowerCase().includes(q)||f.name.toLowerCase().includes(q))
-  .forEach((f,i)=>{
-    list.innerHTML+=`
-    <tr>
-      <td>${f.icon?`<img src="${f.icon}" class="icon">`:""}</td>
-      <td>${f.id}</td>
-      <td>${f.name}</td>
-      <td>${f.intro}</td>
-      <td class="actions">
-        <button onclick="editFriend(${i})">✏️</button>
-        <button onclick="deleteFriend(${i})">🗑</button>
-      </td>
-    </tr>`;
-  });
+
+  friends
+    .filter(f => f.id.toLowerCase().includes(q) || f.name.toLowerCase().includes(q))
+    .forEach((f,i)=>{
+      list.innerHTML += `
+      <tr>
+        <td>${f.icon ? `<img src="${f.icon}" class="icon">` : ""}</td>
+        <td>${f.id}</td>
+        <td>${f.name}</td>
+        <td>${f.intro}</td>
+        <td class="actions">
+          <button onclick="editFriend(${i})">✏️</button>
+          <button onclick="deleteFriend(${i})">🗑</button>
+        </td>
+      </tr>`;
+    });
 }
 
 function editFriend(i){
-  const f=friends[i];
-  clubId.value=f.id;
-  name.value=f.name;
-  intro.value=f.intro;
-  currentIcon=f.icon;
-  editIndex=i;
+  const f = friends[i];
+  document.getElementById("clubId").value = f.id;
+  document.getElementById("friendName").value = f.name;
+  document.getElementById("intro").value = f.intro;
+  currentIcon = f.icon;
+  editIndex = i;
 }
 
 function deleteFriend(i){
