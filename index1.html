@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Clubhouse Friend Manager</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #f6f5f2;
+}
+header {
+  background: #000;
+  color: #f2d58a;
+  padding: 14px;
+  text-align: center;
+  font-size: 20px;
+}
+.container {
+  max-width: 900px;
+  margin: auto;
+  padding: 16px;
+}
+input, textarea, button {
+  width: 100%;
+  padding: 10px;
+  margin: 6px 0;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+button {
+  background: #000;
+  color: #f2d58a;
+  border: none;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  margin-top: 16px;
+}
+th, td {
+  padding: 8px;
+  border-bottom: 1px solid #ddd;
+}
+.icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.actions button {
+  margin-right: 4px;
+}
+@media (max-width:600px){
+  th:nth-child(5), td:nth-child(5){display:none;}
+}
+</style>
+</head>
+
+<body>
+
+<header>🎙 Clubhouse Friend Manager</header>
+
+<div class="container">
+
+<div id="loginBox">
+  <h3>🔐 パスワード</h3>
+  <input type="password" id="passwordInput">
+  <button onclick="login()">ログイン</button>
+</div>
+
+<div id="main" style="display:none">
+
+<h3>➕ 友達追加 / 編集</h3>
+<input id="clubId" placeholder="Clubhouse ID">
+<input id="name" placeholder="名前">
+<textarea id="intro" placeholder="紹介"></textarea>
+<input type="file" id="iconInput" accept="image/*">
+<button onclick="saveFriend()">保存</button>
+
+<h3>🔍 検索</h3>
+<input id="search" placeholder="名前・IDで検索" oninput="render()">
+
+<button onclick="exportCSV()">📤 CSVエクスポート</button>
+
+<table>
+<thead>
+<tr>
+  <th>Icon</th>
+  <th>ID</th>
+  <th>名前</th>
+  <th>紹介</th>
+  <th>操作</th>
+</tr>
+</thead>
+<tbody id="list"></tbody>
+</table>
+
+</div>
+</div>
+
+<script>
+const PASS_KEY="club_pass", DATA_KEY="club_friends";
+let friends = JSON.parse(localStorage.getItem(DATA_KEY))||[];
+let editIndex=null, currentIcon=null;
+
+function login(){
+  const p=passwordInput.value;
+  if(!localStorage.getItem(PASS_KEY)) localStorage.setItem(PASS_KEY,p);
+  if(p===localStorage.getItem(PASS_KEY)){
+    loginBox.style.display="none";
+    main.style.display="block";
+    render();
+  } else alert("パスワードが違います");
+}
+
+iconInput.onchange = ()=>{
+  const file = iconInput.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => currentIcon = e.target.result;
+  reader.readAsDataURL(file);
+};
+
+function saveFriend(){
+  const id=clubId.value.trim(), nameVal=name.value.trim(), introVal=intro.value.trim();
+  if(!id||!nameVal) return alert("IDと名前は必須");
+
+  const data={id,name:nameVal,intro:introVal,icon:currentIcon};
+
+  if(editIndex!==null){
+    friends[editIndex]={...friends[editIndex],...data};
+    editIndex=null;
+  } else {
+    friends.push(data);
+  }
+  localStorage.setItem(DATA_KEY,JSON.stringify(friends));
+  clubId.value=name.value=intro.value="";
+  iconInput.value="";
+  currentIcon=null;
+  render();
+}
+
+function render(){
+  const q=search.value.toLowerCase();
+  list.innerHTML="";
+  friends.filter(f=>f.id.toLowerCase().includes(q)||f.name.toLowerCase().includes(q))
+  .forEach((f,i)=>{
+    list.innerHTML+=`
+    <tr>
+      <td>${f.icon?`<img src="${f.icon}" class="icon">`:""}</td>
+      <td>${f.id}</td>
+      <td>${f.name}</td>
+      <td>${f.intro}</td>
+      <td class="actions">
+        <button onclick="editFriend(${i})">✏️</button>
+        <button onclick="deleteFriend(${i})">🗑</button>
+      </td>
+    </tr>`;
+  });
+}
+
+function editFriend(i){
+  const f=friends[i];
+  clubId.value=f.id;
+  name.value=f.name;
+  intro.value=f.intro;
+  currentIcon=f.icon;
+  editIndex=i;
+}
+
+function deleteFriend(i){
+  if(confirm("削除しますか？")){
+    friends.splice(i,1);
+    localStorage.setItem(DATA_KEY,JSON.stringify(friends));
+    render();
+  }
+}
+
+function exportCSV(){
+  let csv="ID,名前,紹介\n";
+  friends.forEach(f=>csv+=`"${f.id}","${f.name}","${f.intro}"\n`);
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
+  a.download="clubhouse_friends.csv";
+  a.click();
+}
+</script>
+
+</body>
+</html>
