@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clubhouse API 人员目录</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        .api-config {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .api-config h3 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .config-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 10px;
+            align-items: end;
+        }
+
+        .config-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .config-group label {
+            font-size: 12px;
+            color: #4a5568;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .config-group input {
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .config-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .save-config-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .save-config-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .controls {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .fetch-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .fetch-input {
+            flex: 1;
+            min-width: 250px;
+            padding: 12px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 25px;
+            font-size: 15px;
+        }
+
+        .fetch-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .fetch-btn {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .fetch-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(72, 187, 120, 0.4);
+        }
+
+        .fetch-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .search-box {
+            margin-bottom: 15px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 25px;
+            font-size: 15px;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .category-filter {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .category-btn {
+            padding: 10px 20px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .category-btn:hover,
+        .category-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .status-message {
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .status-message.success {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+
+        .status-message.error {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #fc8181;
+        }
+
+        .status-message.info {
+            background: #bee3f8;
+            color: #2c5282;
+            border: 1px solid #90cdf4;
+        }
+
+        .people-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .person-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            animation: fadeIn 0.5s ease-out;
+            position: relative;
+        }
+
+        .person-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .category-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            padding: 5px 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #667eea;
+            margin: 0 auto 20px;
+            display: block;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .person-name {
+            font-size: 22px;
+            font-weight: 700;
+            color: #2d3748;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .person-username {
+            font-size: 14px;
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .person-bio {
+            font-size: 14px;
+            color: #4a5568;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            text-align: center;
+            min-height: 60px;
+        }
+
+        .person-stats {
+            display: flex;
+            justify-content: space-around;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 20px;
+            font-weight: 700;
+            color: #667eea;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #718096;
+            margin-top: 4px;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-delete {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #fed7d7;
+            color: #c53030;
+        }
+
+        .btn-delete:hover {
+            transform: translateY(-2px);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .empty-state p {
+            font-size: 18px;
+            color: #718096;
+            margin-bottom: 20px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .config-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎙️ Clubhouse API 人员目录</h1>
+            <p>通过 API 自动获取用户信息</p>
+        </div>
+
+        <div class="api-config">
+            <h3>⚙️ API 配置</h3>
+            <div class="config-row">
+                <div class="config-group">
+                    <label>API Base URL</label>
+                    <input type="text" id="apiUrl" placeholder="https://www.clubhouseapi.com/api" value="https://www.clubhouseapi.com/api">
+                </div>
+                <div class="config-group">
+                    <label>Auth Token</label>
+                    <input type="password" id="authToken" placeholder="Your auth token">
+                </div>
+                <div class="config-group">
+                    <label>User ID</label>
+                    <input type="text" id="userId" placeholder="Your user ID">
+                </div>
+                <button class="save-config-btn" onclick="saveConfig()">💾 保存</button>
+            </div>
+        </div>
+
+        <div class="status-message" id="statusMessage"></div>
+
+        <div class="controls">
+            <div class="fetch-section">
+                <input type="text" class="fetch-input" id="userIdInput" placeholder="输入 Clubhouse 用户 ID 或用户名...">
+                <button class="fetch-btn" id="fetchBtn" onclick="fetchUserFromAPI()">
+                    🔍 获取用户信息
+                </button>
+            </div>
+
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="🔍 搜索本地列表...">
+            </div>
+
+            <div class="category-filter">
+                <button class="category-btn active" data-category="all">全部</button>
+                <button class="category-btn" data-category="科技">科技</button>
+                <button class="category-btn" data-category="创业">创业</button>
+                <button class="category-btn" data-category="投资">投资</button>
+                <button class="category-btn" data-category="艺术">艺术</button>
+                <button class="category-btn" data-category="其他">其他</button>
+            </div>
+        </div>
+
+        <div class="people-grid" id="peopleGrid"></div>
+    </div>
+
+    <script>
+        let people = [];
+        let apiConfig = {
+            baseUrl: 'https://www.clubhouseapi.com/api',
+            authToken: '',
+            userId: ''
+        };
+        let currentFilter = 'all';
+        let searchTerm = '';
+
+        function showStatus(message, type) {
+            const statusEl = document.getElementById('statusMessage');
+            statusEl.textContent = message;
+            statusEl.className = `status-message ${type}`;
+            statusEl.style.display = 'block';
+            setTimeout(() => {
+                statusEl.style.display = 'none';
+            }, 5000);
+        }
+
+        function saveConfig() {
+            apiConfig.baseUrl = document.getElementById('apiUrl').value;
+            apiConfig.authToken = document.getElementById('authToken').value;
+            apiConfig.userId = document.getElementById('userId').value;
+
+            if (!apiConfig.authToken || !apiConfig.userId) {
+                showStatus('❌ 请填写完整的 API 配置信息', 'error');
+                return;
+            }
+
+            showStatus('✅ API 配置已保存', 'success');
+        }
+
+        async function fetchUserFromAPI() {
+            const userInput = document.getElementById('userIdInput').value.trim();
+            
+            if (!userInput) {
+                showStatus('❌ 请输入用户 ID 或用户名', 'error');
+                return;
+            }
+
+            if (!apiConfig.authToken || !apiConfig.userId) {
+                showStatus('❌ 请先配置 API 信息', 'error');
+                return;
+            }
+
+            const fetchBtn = document.getElementById('fetchBtn');
+            const originalText = fetchBtn.innerHTML;
+            fetchBtn.disabled = true;
+            fetchBtn.innerHTML = '<span class="loading"></span> 获取中...';
+
+            try {
+                // 根据 Clubhouse API 文档构造请求
+                const response = await fetch(`${apiConfig.baseUrl}/get_profile`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'CH-Languages': 'zh-CN',
+                        'CH-Locale': 'zh-CN',
+                        'Authorization': `Token ${apiConfig.authToken}`,
+                        'CH-UserID': apiConfig.userId
+                    },
+                    body: JSON.stringify({
+                        user_id: parseInt(userInput) || null,
+                        username: isNaN(userInput) ? userInput : null
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API 请求失败: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.success && data.user_profile) {
+                    const profile = data.user_profile;
+                    
+                    // 将 API 数据转换为我们的格式
+                    const newPerson = {
+                        id: profile.user_id || Date.now(),
+                        avatar: profile.photo_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.user_id}`,
+                        name: profile.name || '未知用户',
+                        username: `@${profile.username || 'unknown'}`,
+                        bio: profile.bio || '暂无简介',
+                        category: '其他', // 默认分类，可以后续修改
+                        followers: profile.num_followers || 0,
+                        following: profile.num_following || 0
+                    };
+
+                    // 检查是否已存在
+                    const existingIndex = people.findIndex(p => p.id === newPerson.id);
+                    if (existingIndex >= 0) {
+                        people[existingIndex] = newPerson;
+                        showStatus('✅ 用户信息已更新', 'success');
+                    } else {
+                        people.push(newPerson);
+                        showStatus('✅ 用户已添加到列表', 'success');
+                    }
+
+                    renderPeople();
+                    document.getElementById('userIdInput').value = '';
+                } else {
+                    showStatus('❌ 未找到该用户', 'error');
+                }
+
+            } catch (error) {
+                console.error('API Error:', error);
+                showStatus(`❌ 获取失败: ${error.message}`, 'error');
+                
+                // 提示：这是演示模式
+                showStatus('ℹ️ 演示模式：由于 API 需要真实的认证令牌，这里使用模拟数据', 'info');
+                
+                // 添加模拟数据
+                const mockPerson = {
+                    id: Date.now(),
+                    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${userInput}`,
+                    name: userInput,
+                    username: `@${userInput}`,
+                    bio: '这是一个演示用户。请配置真实的 API 令牌以获取实际数据。',
+                    category: '其他',
+                    followers: Math.floor(Math.random() * 50000),
+                    following: Math.floor(Math.random() * 5000)
+                };
+                
+                people.push(mockPerson);
+                renderPeople();
+                document.getElementById('userIdInput').value = '';
+            } finally {
+                fetchBtn.disabled = false;
+                fetchBtn.innerHTML = originalText;
+            }
+        }
+
+        function renderPeople() {
+            const grid = document.getElementById('peopleGrid');
+            const filteredPeople = people.filter(person => {
+                const matchesCategory = currentFilter === 'all' || person.category === currentFilter;
+                const matchesSearch = searchTerm === '' || 
+                    person.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    person.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    person.bio.toLowerCase().includes(searchTerm.toLowerCase());
+                return matchesCategory && matchesSearch;
+            });
+
+            if (filteredPeople.length === 0) {
+                grid.innerHTML = '<div class="empty-state"><p>暂无用户数据</p><p style="font-size: 14px; color: #a0aec0;">输入用户 ID 开始添加</p></div>';
+                return;
+            }
+
+            grid.innerHTML = filteredPeople.map(person => `
+                <div class="person-card">
+                    <div class="category-badge">${person.category}</div>
+                    <img src="${person.avatar}" alt="${person.name}" class="avatar">
+                    <div class="person-name">${person.name}</div>
+                    <div class="person-username">${person.username}</div>
+                    <div class="person-bio">${person.bio}</div>
+                    <div class="person-stats">
+                        <div class="stat">
+                            <span class="stat-number">${formatNumber(person.followers)}</span>
+                            <span class="stat-label">关注者</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number">${formatNumber(person.following)}</span>
+                            <span class="stat-label">关注中</span>
+                        </div>
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn-delete" onclick="deletePerson(${person.id})">🗑️ 移除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function formatNumber(num) {
+            if (num >= 10000) return (num / 10000).toFixed(1) + 'w';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
+            return num.toString();
+        }
+
+        function deletePerson(id) {
+            if (confirm('确定要移除这个用户吗？')) {
+                people = people.filter(p => p.id !== id);
+                renderPeople();
+            }
+        }
+
+        document.querySelectorAll('.category-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentFilter = this.dataset.category;
+                renderPeople();
+            });
+        });
+
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            searchTerm = e.target.value;
+            renderPeople();
+        });
+
+        document.getElementById('userIdInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                fetchUserFromAPI();
+            }
+        });
+
+        renderPeople();
+    </script>
+</body>
+</html>
