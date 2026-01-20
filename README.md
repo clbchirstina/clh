@@ -5,4 +5,4 @@ curl -X POST https://www.clubhouseapi.com/api/start_phone_number_auth \
   -H "CH-Locale: ja_JP" \
   -H "CH-AppVersion: 0.1.27" \
   -H "CH-AppBuild: 304" \
-  -d '{"phone_number": "+818051097060"}'
+  -d '{"phone_number": "+81"}'
