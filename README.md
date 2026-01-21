@@ -24,7 +24,7 @@ Mac: Cmd + Option + I
 Console タブをクリック
 以下のコードを貼り付けて Enter：
 
-
+// JavaScript
 (function() {
   try {
     // __NEXT_DATA__ からデータを取得（最も確実）
